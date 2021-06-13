@@ -1,0 +1,59 @@
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.Vector;
+
+
+public class Server {
+    // object of static from player class
+    static Player player;
+
+    // storage users that are accepted to server socket
+    static Vector<Server_clients> users;
+
+    public Server(){
+        player = new Player();
+        users = new Vector<>();
+    }
+
+    /**
+     * connecting players to the server
+     * and making a new thread for each server_client(client_Handler)
+     * adding server_clients to users vector
+     * @param num_players
+     */
+    public void connenct(int num_players){
+        int count_players = 0;
+        ServerSocket serverSocket = null;
+        try {
+             serverSocket = new ServerSocket(8000);
+            Socket socket = null;
+            do{
+                 socket = serverSocket.accept();
+                count_players++;
+                System.out.println("new player connected: client" + count_players);
+                Server_clients server_clients = new Server_clients(socket,count_players);
+                users.add(server_clients);
+
+      //          Thread t1 = new Thread(new Server_Day(socket),"day");
+                Thread t2 = new Thread(server_clients,"client"+count_players);
+
+                t2.start();
+            }while (count_players < num_players);
+
+        }catch (IOException e){
+            e.printStackTrace();
+        }finally {
+            try {
+                if (serverSocket != null) {
+                    serverSocket.close();
+                }
+            }catch (IOException e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+
+}
