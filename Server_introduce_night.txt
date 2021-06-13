@@ -1,0 +1,313 @@
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+import java.util.Random;
+import java.util.Scanner;
+
+/**
+ * tasks server do in introducing_night
+ */
+public class Server_introduce_night {
+
+    DataInputStream in;
+    DataOutputStream out;
+
+    // name of client connected to this server
+    String name_client;
+
+    // role of client connected to this server
+    private Player role;
+
+    // socket related to this night
+    private Socket socket_night;
+
+    // show the player connect that is first or second or ...
+    private int player_index;
+
+    /**
+     * constructor getting player_index from server_clients and socket
+     * newing data input and output stream
+     * @param socket from server_clients
+     * @param player_index from server_clients
+     * @throws IOException
+     */
+    public Server_introduce_night(Socket socket, int player_index) throws IOException {
+        socket_night = socket;
+        in = new DataInputStream(socket_night.getInputStream());
+        out = new DataOutputStream(socket_night.getOutputStream());
+        this.player_index = player_index;
+    }
+
+    /**
+     * the tasks that the server does in this night in sequence
+     */
+    public void connect(){
+        Scanner input = new Scanner(System.in);
+        try{
+            out.writeUTF("welcome to Mafia play , it is the introducing night");
+            getting_name();
+
+            Thread.sleep(2000);
+            out.writeUTF("it`s time to determine the roles");
+            mention_roles();
+
+        }catch (IOException | InterruptedException e){
+            e.printStackTrace();
+        }
+    }
+
+    //unused
+    private void check_go() throws IOException {
+        if(player_index == 1 || player_index == 4){
+            for(Server_clients client : Server.users){
+                while(true) {
+                    if (client.getServer_introduce_night().getName_client() != null) {
+                        client.getServer_introduce_night().out.writeUTF("comeon");
+                        System.out.println("ok m");
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * get the user_name of player
+     * and determine his/her role
+     * and setting roles in PLayer class
+     */
+    public void getting_name(){
+        try {
+            out.writeUTF("now enter your username : ");
+            name_client = in.readUTF();
+
+            out.writeUTF(String.valueOf(Server.users.size()));
+            determine_roles();
+
+            Server.player.setRoles(name_client,role);
+       //     System.out.println(name_client);
+       //     System.out.println(role);
+
+     //       out.writeUTF("o");
+      //      server_clients = new Server_clients(socket_night);
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * check if all player are ready to continue
+     * unused
+     */
+    private synchronized void check_continue() {
+        try {
+            while (true) {
+                int help = 0;
+                      Thread.sleep(2000);
+                for (Server_clients client : Server.users) {
+               //     client.getServer_introduce_night().out.writeUTF("read");
+               //     System.out.println("read " + name_client);
+                    if (!client.getServer_introduce_night().in.readUTF().equals("ready")) {
+                        System.out.println("no s");
+                        help = 1;
+                        break;
+                    }
+               //     System.out.println("ready " + name_client);
+                }
+                if (help == 0) {
+                    out.writeUTF("ready 2");
+                    break;
+                }
+            }
+        }catch (IOException | InterruptedException e){
+            e.printStackTrace();
+        }
+        System.out.println("ok2");
+
+    }
+
+    /**
+     * mentioning roles with sequence
+     */
+    private synchronized void mention_roles() {
+        int sequence = 1;
+        while(sequence < 4) {
+            int help = 0;
+            try {
+                if (Server.player.getRoles().get(name_client) instanceof Mafia && sequence == 1) {
+                    if (Server.player.getRoles().get(name_client) instanceof God_father) {
+                        out.writeUTF("god_father");
+                   //     Thread.sleep(10000);
+                        sendOther(name_client + " is the God_father", "god_father");
+                        sendOther("sequence one more","mention");
+                    } else if (Server.player.getRoles().get(name_client) instanceof Doctor_lector) {
+                        out.writeUTF("doctor_lector");
+                    } else {
+                        out.writeUTF("mafia");
+                    }
+                    help = 1;
+                    Thread.sleep(5000);
+                } else if (Server.player.getRoles().get(name_client) instanceof Doctor || Server.player.getRoles().get(name_client) instanceof Mayor) {
+                    if (sequence == 2) {
+                        if (Server.player.getRoles().get(name_client) instanceof Doctor) {
+                            out.writeUTF("doctor");
+                        //    out.writeUTF("you are Doctor");
+                            sendOther(name_client + " is the Doctor", "doctor");
+                                 sendOther("sequence one more","mention");
+                        } else if (Server.player.getRoles().get(name_client) instanceof Mayor) {
+                            out.writeUTF("mayor");
+                         //   out.writeUTF("you are Mayor");
+                        }
+                        help = 1;
+                        Thread.sleep(5000);
+                //        sendOther(String.valueOf(sequence),"mention");
+                    }
+                } else if (Server.player.getRoles().get(name_client) instanceof Detector && sequence == 3) {
+                    out.writeUTF("detector");
+                    help = 1;
+                    sendOther("sequence one more","mention");
+                } else if (Server.player.getRoles().get(name_client) instanceof Killer && sequence == 4) {
+                    out.writeUTF("killer");
+                    help = 1;
+                    sendOther("sequence one more","mention");
+                } else if (Server.player.getRoles().get(name_client) instanceof Psychologist && sequence == 5) {
+                    out.writeUTF("psychologist");
+                    help = 1;
+                    sendOther("sequence one more","mention");
+                } else if (Server.player.getRoles().get(name_client) instanceof Strong_health && sequence == 6) {
+                    out.writeUTF("strong_health");
+                    help = 1;
+                    sendOther("sequence one more","mention");
+                }
+
+                //      System.out.println("ok1");
+                if(help == 0){
+                    out.writeUTF("waiting");
+                }
+                in.readUTF();
+                sequence++;
+        //            System.out.println(sequence);
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+                break;
+            }
+        }
+        System.out.println("ok f");
+    }
+
+    /**
+     * sending specific message depends on task to someone else
+     * @param message to send
+     * @param task
+     */
+    private void sendOther(String message, String task) {
+        try {
+            int help;
+            do {
+                help = 0;
+                for (Server_clients client : Server.users) {
+                    if (client.getServer_introduce_night().getName_client() == null) {
+                        help = 1;
+                    }
+                }
+            }while (help != 0);
+            for (Server_clients client : Server.users) {
+                if(task.equals("god_father")) {
+                    int index = 0;
+                        if (!client.getServer_introduce_night().getName_client().equals(this.name_client) && client.getServer_introduce_night().getRole() instanceof Mafia) {
+                            client.getServer_introduce_night().out.writeUTF(message);
+                            break;
+                        }
+                }
+                else if(task.equals("doctor")) {
+                    if (client.getServer_introduce_night().getRole() instanceof Mayor) {
+                        client.out.writeUTF(message);
+                    }
+                }
+                if(task.equals("mention")){
+                    //    int sequence = Integer.parseInt(message);
+                    //          System.out.println(message);
+           //         Thread.sleep(7000);
+                    client.getServer_introduce_night().out.writeUTF(message);
+                }
+            }
+        }catch (IOException e){
+            e.printStackTrace();
+        }catch (NullPointerException e){
+            System.out.println("null s");
+        }
+    }
+
+    /**
+     * determine which role each player have
+     * by random numbers
+     */
+    public synchronized void determine_roles(){
+        Random random = new Random();
+        int role_num ;
+
+        while (true) {
+            int help = 0;
+            role_num = random.nextInt(6);
+            for (int role : Server.player.getStorage_roles()) {
+                if (role_num == role) {
+                    help = 1;
+                    break;
+                }
+            }
+            if (help == 0) {
+                //          System.out.println(role_num);
+                Server.player.setStorage_roles(role_num);
+                break;
+            }
+        }
+
+        if(role_num == 0){
+            //        roles.put(player_name,new God_father());
+            role = new God_father();
+        }
+        else if(role_num == 1){
+            //       roles.put(player_name,new Doctor_lector());
+            role = new Doctor_lector();
+        }
+        else if(role_num == 2){
+            //       roles.put(player_name, new Mafia());
+            role =  new Mafia();
+        }
+        else if(role_num == 3){
+            //         roles.put(player_name,new Mayor());
+            role = new Doctor();
+        }
+        else if(role_num == 4){
+            //       roles.put(player_name,new Killer());
+            role =  new Mayor();
+        }
+        else if(role_num == 5){
+            role = new Detector();
+        }
+        else if(role_num == 6){
+            //       roles.put(player_name,new Psychologist());
+            role = new Killer();
+        }
+        else if(role_num == 7){
+            //      roles.put(player_name,new Strong_health());
+            role = new Psychologist();
+        }else if(role_num == 8){
+            //      roles.put(player_name,new Doctor());
+            role = new Strong_health();
+        }else{
+            role = new Citizen();
+        }
+    }
+
+    // getting name of the client
+    public String getName_client() {
+        return name_client;
+    }
+
+    // getting role of the client
+    public Player getRole() {
+        return role;
+    }
+}

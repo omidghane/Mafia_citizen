@@ -1,0 +1,123 @@
+import java.io.*;
+import java.net.Socket;
+import java.util.*;
+
+public class Server_clients implements Runnable{
+   // BufferedReader in;
+  //  PrintWriter out;
+
+    private Play_Round play_round;
+
+    DataInputStream in;
+    DataOutputStream out;
+
+    // object og introduce_night for accessing to this class
+    private Server_introduce_night server_introduce_night;
+
+    // name of client connected to this server
+     private String name_client;
+
+     // role of client connected to this server
+     private Player role;
+
+    // the socket
+    private Socket socket;
+
+    // show the player connect that is first or second or ...
+    private int player_index;
+
+    /**
+     * constructor for saving socket and newing objects
+     * @param socket
+     * @param player_index
+     * @throws IOException
+     */
+    public Server_clients(Socket socket, int player_index) throws IOException {
+        this.socket = socket;
+     //   in = new DataInputStream(socket.getInputStream());
+    //    out = new DataOutputStream(socket.getOutputStream());
+        server_introduce_night = new Server_introduce_night(socket,player_index);
+        play_round = new Play_Round();
+    //    in = new BufferedReader(new InputStreamReader(socket_night.getInputStream()));
+    //    out = new PrintWriter(new OutputStreamWriter(socket_night.getOutputStream()))
+        this.player_index = player_index;
+    }
+
+    /**
+     * the client_Handler for doing things server do for each player
+     * during introducing_night , day , night
+     */
+    @Override
+    public void run() {
+        Scanner input = new Scanner(System.in);
+     //   Thread t_h = new Thread(new Helping_thread(),"t2");
+        try {
+        //   while(true) {
+            if ("introduce_night".equals(play_round.getState())) {
+                server_introduce_night.connect();
+                Thread.sleep(10000);
+          //      System.out.println("thanks");
+                play_round.state_changing();
+            }  if ("day".equals(play_round.getState())) {
+           //     System.out.println("its day");
+                play_round.state_changing();
+            }  if ("night".equals(play_round.getState())) {
+           //     System.out.println("its night");
+                play_round.state_changing();
+            }
+        //    }
+        }catch (InterruptedException e){
+            e.printStackTrace();
+        }
+
+    }
+
+    // unused function
+    private void sendingmessage(){
+        try {
+            String s = in.readUTF();
+            StringTokenizer tokenizer = new StringTokenizer(s, "#");
+            String message = tokenizer.nextToken();
+            String receipent = tokenizer.nextToken();
+
+            for (Server_clients client : Server.users) {
+                if (client.name_client.equals(receipent)) {
+                    client.out.writeUTF(this.name_client + " : " + message);
+                }
+            }
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+
+    }
+
+    // getting role of the client
+    public Player getRole() {
+        return role;
+    }
+
+    // getting name of the client
+    public String getName_client() {
+        return name_client;
+    }
+
+    // getting the object of server_introduce_night
+    public Server_introduce_night getServer_introduce_night() {
+        return server_introduce_night;
+    }
+
+    //setting name of the client
+    public void setName_client(String name_client) {
+        this.name_client = name_client;
+    }
+
+    // setting role of the client
+    public void setRole(Player role) {
+        this.role = role;
+    }
+
+    // getting the player index
+    public int getPlayer_index() {
+        return player_index;
+    }
+}

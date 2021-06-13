@@ -1,0 +1,30 @@
+
+public class Play_Round {
+    // determine that now is night or day or first night!!
+    private String state;
+
+
+    /**
+     * constructor for initializing state
+     */
+    public Play_Round(){
+        state = "introduce_night";
+        
+    }
+
+    /**
+     * changing state of playing 
+     */
+    public void state_changing(){
+        switch (state) {
+            case "introduce_night" -> state = "day";
+            case "day" -> state = "night";
+            case "night" -> state = "day";
+        }
+    }
+
+    // get the state
+    public String getState() {
+        return state;
+    }
+}
