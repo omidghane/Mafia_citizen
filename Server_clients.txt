@@ -9,6 +9,7 @@ public class Server_clients implements Runnable{
     // showing
     private boolean alive;
 
+    // object that only have the state of playing and change it
     private Play_Round play_round;
 
     DataInputStream in;
@@ -20,6 +21,7 @@ public class Server_clients implements Runnable{
     // object of day for accessing to this class
     private Server_Day server_day;
 
+    // object of night for accessing to this class
     private Server_Night server_night;
 
     // name of client connected to this server
@@ -48,8 +50,6 @@ public class Server_clients implements Runnable{
         server_day = new Server_Day(socket);
         server_night = new Server_Night(socket);
         play_round = new Play_Round();
-    //    in = new BufferedReader(new InputStreamReader(socket_night.getInputStream()));
-    //    out = new PrintWriter(new OutputStreamWriter(socket_night.getOutputStream()))
         this.player_index = player_index;
         alive = true;
     }
@@ -61,29 +61,18 @@ public class Server_clients implements Runnable{
     @Override
     public void run() {
         Scanner input = new Scanner(System.in);
-     //   Thread t_h = new Thread(new Helping_thread(),"t2");
         try {
         //   while(true) {
             if ("introduce_night".equals(play_round.getState())) {
-            //    server_introduce_night.connect();
-            //    name_client = server_introduce_night.getName_client();
-             //   System.out.println(name_client);
+                server_introduce_night.connect();
+                name_client = server_introduce_night.getName_client();
 
-             //   Thread.sleep(5000);
-                name_client = in.readUTF();
-                if(player_index == 1) {
-                    Server.player.setRoles(name_client, new God_father());
-                }else if(player_index == 2){
-                    Server.player.setRoles(name_client, new Mafia());
-                }else if(player_index == 3){
-                    Server.player.setRoles(name_client, new Doctor_lector());
-                }
                 for(Server_clients client : Server.users){
                     Server.ready_continue.put(client.getName_client(),false);
                 }
+                send_role();
 
                 play_round.state_changing();
-
             }  if ("day".equals(play_round.getState())) {
                 server_day.setName_client(name_client);
                 server_day.connect();
@@ -94,7 +83,6 @@ public class Server_clients implements Runnable{
                     System.out.println(name_client + " dead");
                     out.writeUTF("you are removed");
                     out.writeUTF("DEAD");
-                    Thread.sleep(3000);
                     return;
                 }else{
                     out.writeUTF("ALIVE");
@@ -103,7 +91,8 @@ public class Server_clients implements Runnable{
                 play_round.state_changing();
                 Thread.sleep(5000);
             }  if ("night".equals(play_round.getState())) {
-                System.out.println("its night");
+
+                server_night.connect();
 
                 play_round.state_changing();
             }
@@ -112,6 +101,30 @@ public class Server_clients implements Runnable{
             e.printStackTrace();
         }
 
+    }
+
+    /**
+     * send the role of player to it self
+     * @throws IOException
+     */
+    private void send_role() throws IOException {
+        if(Server.player.getRoles().get(name_client) instanceof God_father){
+            out.writeUTF("GOD_FATHER");
+        }else if(Server.player.getRoles().get(name_client) instanceof Doctor_lector){
+            out.writeUTF("DOCTOR_LECTOR");
+        }else if(Server.player.getRoles().get(name_client) instanceof Mafia){
+            out.writeUTF("MAFIA");
+        }else if(role instanceof Doctor){
+            out.writeUTF("DOCTOR");
+        }else if(role instanceof Detector){
+            out.writeUTF("DETECTOR");
+        }else if(role instanceof Killer){
+            out.writeUTF("KILLER");
+        }else if(role instanceof Psychologist){
+            out.writeUTF("PSYCHOLOGIST");
+        }else if(role instanceof Strong_health){
+            out.writeUTF("STRONG_HEALTH");
+        }
     }
 
     /**

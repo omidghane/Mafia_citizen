@@ -1,0 +1,215 @@
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Scanner;
+
+public class Client_introduce_night {
+
+    private DataInputStream in;
+    private DataOutputStream out;
+    private Socket socket;
+
+    // name of client connected to the server
+    private String name_client;
+
+    //number of players playing
+    private int num_users;
+
+    // the inputs that we have saved in storage
+    private ArrayList<String> inputs_storage;
+
+    //cause read thread end
+    private int kill = 0;
+
+    public Client_introduce_night(Socket socket) throws IOException {
+        this.socket = socket;
+        in = new DataInputStream(socket.getInputStream());
+        out = new DataOutputStream(socket.getOutputStream());
+        inputs_storage = new ArrayList<>();
+    }
+
+    public void connect(){
+        try{
+            readMessage.start();
+            Scanner input = new Scanner(System.in);
+            System.out.println(check_input("welcome to Mafia play , it is the introducing night"));
+
+            getting_name();
+
+            System.out.println(check_input("it`s time to determine the roles"));
+
+            mention_roles();
+            kill = 1;
+            Thread.sleep(7000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * get the user_name of player
+     * set the number of players in this class
+     * mentioning to be ready
+     */
+    public void getting_name(){
+        try {
+            Scanner input = new Scanner(System.in);
+            System.out.print(check_input("now enter your username : "));
+            name_client = input.next();
+            out.writeUTF(name_client);
+            num_users = Integer.parseInt(check_input(new String[]{"1", "2", "3","4","5","6","7","8","9","10"}));
+
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * giving permission to mention other roles
+     */
+    private void mention_roles() {
+        int sequence = 1;
+        while (sequence < 4) {
+            try {
+                String task = check_input(new String[]{ "waiting" ,"god_father", "doctor", "mafia", "mayor", "doctor_lector","detector","killer","psychologist","strong_health"});
+
+                switch (task) {
+                    case "god_father", "doctor","detector","killer","psychologist","strong_health" -> {
+                        System.out.println("you are " + task);
+                    }
+                    case "mafia", "doctor_lector", "mayor" -> {
+                        System.out.println("you are " + task);
+                        String check = check_input();
+                        System.out.println(check);
+                    }
+                    case "waiting" -> {
+                        System.out.println(task + " ...");
+                    }
+                    default ->{
+
+                    }
+                }
+                inputs_storage.remove(task);
+
+                check_input("sequence one more");
+                out.writeUTF("continue");
+                sequence++;
+            }catch(IOException e){
+                e.printStackTrace();
+                break;
+            }
+        }
+    }
+
+    /**
+     * a divided thread for reading and saving the information from server
+     */
+    Thread readMessage = new Thread(new Runnable() {
+
+        @Override
+        public void run() {
+
+            while (true) {
+                try {
+                    String msg = in.readUTF();
+                    if(kill == 1){
+                        return;
+                    }
+                    inputs_storage.add(msg);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    break;
+                }
+            }
+        }
+    });
+
+    /**
+     * check out if the desired message is equal to the saved inputs
+     * @param message include some parts that all parts will be checked
+     * @return
+     */
+    public String check_input(String[] message) {
+        try {
+            int help = 0;
+            do {
+                for (String input : inputs_storage) {
+                    for(int i = 0 ; i < message.length ; i++) {
+                        if (input.equals(message[i])){
+                            help = 1;
+                            return input;
+                        }
+                    }
+                }
+                Thread.sleep(5000);
+            } while (help != 1);
+        }catch (InterruptedException e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     *  check out if the desired message is equal to the saved inputs
+     * @param message
+     * @return
+     */
+    public String check_input(String message) {
+        try {
+            int help = 0;
+            do {
+                for (String input : inputs_storage) {
+                    if (input.equals(message)) {
+                        help = 1;
+                        return input;
+                    }
+                }
+                Thread.sleep(5000);
+            } while (help != 1);
+        }catch (InterruptedException e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * check just one desired sentence if saved in inputs
+     * @return desired input
+     */
+    public synchronized String check_input() {
+        String[] new_input;
+        try {
+            int help = 0;
+            //    Iterator<String> input = inputs_storage.iterator();
+            //     do {
+            for(String input : inputs_storage) {
+                new_input = input.split(" ");
+                if(new_input.length < 2){
+                    continue;
+                }
+                if (new_input[1].equals("is")) {
+                    help = 1;
+                    return input;
+                }
+            }
+            Thread.sleep(5000);
+            //     } while (help != 1);
+        }catch (InterruptedException e){
+            e.printStackTrace();
+        }catch (IndexOutOfBoundsException ignored){
+
+        }
+        return null;
+    }
+
+    public String getName_client() {
+        return name_client;
+    }
+
+    public int getNum_users() {
+        return num_users;
+    }
+}
+

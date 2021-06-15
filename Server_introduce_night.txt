@@ -8,6 +8,7 @@ import java.util.Scanner;
 /**
  * tasks server do in introducing_night
  */
+
 public class Server_introduce_night {
 
     DataInputStream in;
@@ -52,23 +53,11 @@ public class Server_introduce_night {
             out.writeUTF("it`s time to determine the roles");
             mention_roles();
 
+            // sending for returning thread in client class
+            out.writeUTF("ok");
+
         }catch (IOException | InterruptedException e){
             e.printStackTrace();
-        }
-    }
-
-    //unused
-    private void check_go() throws IOException {
-        if(player_index == 1 || player_index == 4){
-            for(Server_clients client : Server.users){
-                while(true) {
-                    if (client.getServer_introduce_night().getName_client() != null) {
-                        client.getServer_introduce_night().out.writeUTF("comeon");
-                        System.out.println("ok m");
-                        break;
-                    }
-                }
-            }
         }
     }
 
@@ -89,8 +78,6 @@ public class Server_introduce_night {
        //     System.out.println(name_client);
        //     System.out.println(role);
 
-     //       out.writeUTF("o");
-      //      server_clients = new Server_clients(socket_night);
         }catch (IOException e){
             e.printStackTrace();
         }
@@ -138,7 +125,6 @@ public class Server_introduce_night {
                 if (Server.player.getRoles().get(name_client) instanceof Mafia && sequence == 1) {
                     if (Server.player.getRoles().get(name_client) instanceof God_father) {
                         out.writeUTF("god_father");
-                   //     Thread.sleep(10000);
                         sendOther(name_client + " is the God_father", "god_father");
                         sendOther("sequence one more","mention");
                     } else if (Server.player.getRoles().get(name_client) instanceof Doctor_lector) {
@@ -167,33 +153,34 @@ public class Server_introduce_night {
                     out.writeUTF("detector");
                     help = 1;
                     sendOther("sequence one more","mention");
+                    Thread.sleep(5000);
                 } else if (Server.player.getRoles().get(name_client) instanceof Killer && sequence == 4) {
                     out.writeUTF("killer");
                     help = 1;
                     sendOther("sequence one more","mention");
+                    Thread.sleep(5000);
                 } else if (Server.player.getRoles().get(name_client) instanceof Psychologist && sequence == 5) {
                     out.writeUTF("psychologist");
                     help = 1;
                     sendOther("sequence one more","mention");
+                    Thread.sleep(5000);
                 } else if (Server.player.getRoles().get(name_client) instanceof Strong_health && sequence == 6) {
                     out.writeUTF("strong_health");
                     help = 1;
                     sendOther("sequence one more","mention");
+                    Thread.sleep(5000);
                 }
 
-                //      System.out.println("ok1");
                 if(help == 0){
                     out.writeUTF("waiting");
                 }
                 in.readUTF();
                 sequence++;
-        //            System.out.println(sequence);
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
                 break;
             }
         }
-        System.out.println("ok f");
     }
 
     /**
@@ -214,7 +201,6 @@ public class Server_introduce_night {
             }while (help != 0);
             for (Server_clients client : Server.users) {
                 if(task.equals("god_father")) {
-                    int index = 0;
                         if (!client.getServer_introduce_night().getName_client().equals(this.name_client) && client.getServer_introduce_night().getRole() instanceof Mafia) {
                             client.getServer_introduce_night().out.writeUTF(message);
                             break;
@@ -226,16 +212,11 @@ public class Server_introduce_night {
                     }
                 }
                 if(task.equals("mention")){
-                    //    int sequence = Integer.parseInt(message);
-                    //          System.out.println(message);
-           //         Thread.sleep(7000);
                     client.getServer_introduce_night().out.writeUTF(message);
                 }
             }
-        }catch (IOException e){
+        }catch (IOException | NullPointerException e){
             e.printStackTrace();
-        }catch (NullPointerException e){
-            System.out.println("null s");
         }
     }
 
@@ -264,37 +245,29 @@ public class Server_introduce_night {
         }
 
         if(role_num == 0){
-            //        roles.put(player_name,new God_father());
             role = new God_father();
         }
         else if(role_num == 1){
-            //       roles.put(player_name,new Doctor_lector());
             role = new Doctor_lector();
         }
         else if(role_num == 2){
-            //       roles.put(player_name, new Mafia());
             role =  new Mafia();
         }
         else if(role_num == 3){
-            //         roles.put(player_name,new Mayor());
             role = new Doctor();
         }
         else if(role_num == 4){
-            //       roles.put(player_name,new Killer());
             role =  new Mayor();
         }
         else if(role_num == 5){
             role = new Detector();
         }
         else if(role_num == 6){
-            //       roles.put(player_name,new Psychologist());
             role = new Killer();
         }
         else if(role_num == 7){
-            //      roles.put(player_name,new Strong_health());
             role = new Psychologist();
         }else if(role_num == 8){
-            //      roles.put(player_name,new Doctor());
             role = new Strong_health();
         }else{
             role = new Citizen();

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Random;
 import java.util.Scanner;
 
+
 public class Client {
      DataInputStream in;
      DataOutputStream out;
@@ -20,6 +21,10 @@ public class Client {
 
     private Client_Day client_day;
 
+    private Client_Night client_night;
+
+    private Player role;
+
     public Client() throws IOException {
         socket = new Socket("localhost",8585);
         in = new DataInputStream(socket.getInputStream());
@@ -27,7 +32,9 @@ public class Client {
 
         client_introduce_night = new Client_introduce_night(socket);
         name_client = client_introduce_night.getName_client();
-
+     //   client_day = new Client_Day(socket, name_client);
+    //    client_night = new Client_Night(name_client);
+        role = new Player();
       //  in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
       //  out = new PrintWriter((socket.getOutputStream()));
     }
@@ -37,34 +44,57 @@ public class Client {
         try {
             int index = 0;
             Scanner input = new Scanner(System.in);
-            //   client_introduce_night.connect();
-            //   name_client = client_introduce_night.getName_client();
-            name_client = input.next();
-            out.writeUTF(name_client);
+               client_introduce_night.connect();
+               name_client = client_introduce_night.getName_client();
+           // name_client = input.next();
+           // out.writeUTF(name_client);
+            String role_name = in.readUTF();
+            set_role(role_name);
 
             client_day = new Client_Day(socket, name_client);
+
             System.out.println();
             client_day.connect();
-            System.out.println("goood x");
             while (true) {
                 if (client_day.isFinish_day()) {
-                    System.out.println("break f");
                     break;
                 }
+                Thread.sleep(5000);
             }
-            String life = in.readUTF();
-            System.out.println(life + " lk");
-            if (life.equals("DEAD")) {
-                //   System.out.println("you died ...");
+            if (in.readUTF().equals("DEAD")) {
                 return;
             }
 
+            client_night = new Client_Night(socket,name_client);
+            client_night.connect();
 
-            //  System.out.println("finish day");
-            //      System.out.println(in.readUTF());
 
-        }catch (IOException e){
+        }catch (IOException | InterruptedException e){
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * setting the role of the player received from server
+     * @param role_name
+     */
+    private void set_role(String role_name) {
+        if(role_name.equals("GOD_FATHER")){
+            role = new God_father();
+        }else if(role_name.equals("DOCTOR_LECTOR")){
+            role = new Doctor_lector();
+        }else if(role_name.equals("MAFIA")){
+            role = new Mafia();
+        }else if(role_name.equals("DOCTOR")){
+            role = new Doctor();
+        }else if(role_name.equals("DETECTOR")){
+            role = new Detector();
+        }else if(role_name.equals("KILLER")){
+            role = new Killer();
+        }else if(role_name.equals("PSYCHOLOGIST")){
+            role = new Psychologist();
+        }else if(role_name.equals("STRONG_HEALTH")){
+            role = new Strong_health();
         }
     }
 

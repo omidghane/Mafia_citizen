@@ -1,0 +1,26 @@
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+
+public class Client_Night {
+
+    DataInputStream in;
+    DataOutputStream out;
+
+    private String name_client;
+
+    public Client_Night(Socket socket, String name_client) throws IOException {
+        this.name_client = name_client;
+        in = new DataInputStream(socket.getInputStream());
+        out = new DataOutputStream(socket.getOutputStream());
+    }
+
+    public void connect(){
+        System.out.println("it is night ...");
+
+       // if()
+    }
+
+
+}

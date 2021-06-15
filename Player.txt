@@ -7,6 +7,7 @@ import java.io.IOException;
  * in this class we save our players information
  * to use them somewhere else
  */
+
 public class Player {
 
     // roles of All players storaged to player class
@@ -86,14 +87,13 @@ public class Player {
                 }
             }
             if (help == 0) {
-                System.out.println("no l");
                 return false;
             }
             int num_votes = votes.get(name_vote);
             votes.replace(name_vote, ++num_votes);
             return true;
         }catch (NullPointerException e){
-            System.out.println("null p");
+            e.printStackTrace();
             return false;
         }
     }
@@ -106,9 +106,9 @@ public class Player {
     public void setRoles(String name,Player player) {
         roles.put(name,player);
         setting_votes(name);
-     //   System.out.println(name + "," +roles.get(name));
     }
 
+    // setting names in votes variable
     private void setting_votes(String player_name){
         votes.put(player_name,0);
     }
@@ -136,3 +136,34 @@ public class Player {
         return dead_player;
     }
 }
+
+public class Citizen extends Player {
+}
+
+public class Mafia extends Player {
+}
+
+public class Detector extends Citizen{
+}
+
+public class Doctor extends Citizen{
+}
+
+public class Doctor_lector extends Mafia{
+}
+
+public class God_father extends Mafia{
+}
+
+public class Killer extends Citizen{
+}
+
+public class Mayor extends  Citizen{
+}
+
+public class Psychologist extends Citizen{
+}
+
+public class Strong_health extends Citizen{
+}
+

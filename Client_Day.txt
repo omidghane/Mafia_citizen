@@ -14,8 +14,6 @@ public class Client_Day {
 
     private String name_client;
 
-    private ArrayList<String> save_messages;
-
     private int swich ;
 
     // state that has done chatting and time over , must vote
@@ -27,13 +25,11 @@ public class Client_Day {
     // if proceed to vote manually
     private boolean vote_manual;
 
-    //
+    // a helping variable;
     private boolean insert;
 
     // if day is finished
     private boolean finish_day;
-
-    private ArrayList<String> inputs_storage;
 
     public Client_Day(Socket socket,String name_client) throws IOException {
         this.socket = socket;
@@ -41,10 +37,8 @@ public class Client_Day {
         out = new DataOutputStream(socket.getOutputStream());
    //     input = new Scanner(System.in);
         this.name_client = name_client;
-        save_messages = new ArrayList<>();
         swich = 0;
         vote_time = false;
-        inputs_storage = new ArrayList<>();
         vote_manual = false;
         insert = false;
         finish_day = false;
@@ -61,9 +55,17 @@ public class Client_Day {
         readMessage.start();
         sendMessage.start();
         try{
-            Thread.sleep(300000);
-            out.writeUTF(name_client + ": VOTE");
-            vote_time = true;
+            for(int i = 0 ; i < 200 ; i++){
+                Thread.sleep(3000);
+                if(vote_manual){
+                    break;
+                }
+            }
+            if(!vote_manual) {
+                out.writeUTF(name_client + ": VOTE");
+                vote_time = true;
+            }
+
 
         }catch (InterruptedException e){
             e.printStackTrace();
@@ -83,31 +85,21 @@ public class Client_Day {
 
             while (true) {
                 try {
-                    System.out.println("before receive q");
                     String msg = in.readUTF();
-                    System.out.println("received");
 
                     if(msg.equals("FINISH UP")){
                         if(!vote_time){
                             vote_manual = true;
-                            System.out.println("true manual v");
                         }
                         swich = 1;
-                        System.out.println("did did l");
                         voting();
                         help = 1;
-                    //    continue;
-                    //    return;
                     }
 
                     if(help == 1) {
-                        System.out.println("here");
-                    //    Thread.sleep(3000);
                         if (msg.equals("TOGETHER")) {
-                            System.out.println("together k");
                             System.out.println(in.readUTF());
                             finish_day = true;
-                        //    Thread.sleep(3000);
                             return;
                         }
                     }
@@ -138,15 +130,12 @@ public class Client_Day {
                 if(help == 0) {
                     String str = null;
                     if(vote_manual){
-                        System.out.println("mauanl time ee");
                         str = input.next();
                         out.writeUTF(str);
-                        System.out.println("wrote b :" + str);
                     }
                     Thread.sleep(2000);
                 }
                 String find = in.readUTF();
-                System.out.println("read xx");
                 if (find.equals("found")) {
                     System.out.println(find);
                     break;
@@ -154,28 +143,9 @@ public class Client_Day {
                     System.out.print(find);
                     help = 0;
                 }else{
-                    System.out.println("else cc");
                     help = 1;
                 }
             }
-        }
-
-        public String check_input(String message) {
-            try {
-                int help = 0;
-                do {
-                    for (String input : inputs_storage) {
-                        if (input.equals(message)) {
-                            help = 1;
-                            return input;
-                        }
-                    }
-                    Thread.sleep(5000);
-                } while (help != 1);
-            }catch (InterruptedException e){
-                e.printStackTrace();
-            }
-            return null;
         }
 
     });
@@ -196,13 +166,11 @@ public class Client_Day {
                 if(!vote_time){
                     msg = (name_client + ": " + msg);
                 }else if(!vote_manual){
-                    System.out.println("insert true w");
                     insert = true;
                 }
 
                 try {
 
-                    // write on the output stream
                     if(!vote_manual) {
                         out.writeUTF(msg);
                     }

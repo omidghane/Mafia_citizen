@@ -6,6 +6,7 @@ import java.util.ConcurrentModificationException;
 
 
 public class Server_Day {
+    //socket of this class
     private Socket socket_day;
 
     public DataOutputStream out;
@@ -38,7 +39,6 @@ public class Server_Day {
                     if(!message.equals("VOTE_TIME")) {
                         for (Server_clients client : Server.users) {
                             if (!client.getServer_day().getName_client().equals(name_client)) {
-                                System.out.println(client.getServer_day().getName_client() + " " + message + ": oi");
                                 client.getServer_day().out.writeUTF(message);
                             }
                         }
@@ -46,11 +46,9 @@ public class Server_Day {
 
                     String[] msg = message.split(": ");
                     if (msg[1].equals("VOTE")) {
-                        System.out.println("bib bib " + name_client);
                         out.writeUTF("FINISH UP");
                         voting();
                         Server.ready_continue.replace(name_client,true);
-                        System.out.println(name_client + " ready out w");
 
                         while (true) {
                             if (check_end()) {
@@ -60,9 +58,7 @@ public class Server_Day {
                         out.writeUTF("TOGETHER");
                         String name = Server.player.most_vote();
                         if(name != null) {
-                            System.out.println(name_client + " k");
                             for (Server_clients client : Server.users) {
-                                System.out.println(client.getServer_day().getName_client() + " p");
                                 client.getServer_day().out.writeUTF(name);
                             }
                         }
@@ -89,7 +85,7 @@ public class Server_Day {
             }
             return true;
         }catch (ConcurrentModificationException e){
-            System.out.println("error got");
+            e.printStackTrace();
             return false;
         }
     }
@@ -103,7 +99,6 @@ public class Server_Day {
         while (true) {
             String name_vote = in.readUTF();
             if(Server.player.getting_vote(name_vote)){
-                System.out.println("found m");
                 out.writeUTF("found");
                 break;
             }
