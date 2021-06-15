@@ -2,6 +2,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Vector;
+import java.util.HashMap;
 
 
 public class Server {
@@ -11,9 +12,13 @@ public class Server {
     // storage users that are accepted to server socket
     static Vector<Server_clients> users;
 
+    // determine which players are ready for another state of playing
+    static HashMap<String,Boolean> ready_continue;
+
     public Server(){
         player = new Player();
         users = new Vector<>();
+        ready_continue = new HashMap<>();
     }
 
     /**
@@ -26,7 +31,7 @@ public class Server {
         int count_players = 0;
         ServerSocket serverSocket = null;
         try {
-             serverSocket = new ServerSocket(8000);
+             serverSocket = new ServerSocket(8585);
             Socket socket = null;
             do{
                  socket = serverSocket.accept();
@@ -55,11 +60,5 @@ public class Server {
     }
 
 
-}
 
-public class Main_server {
-    public static void main(String[] args){
-        Server server = new Server();
-        server.connenct(9);
-    }
 }

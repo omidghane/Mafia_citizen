@@ -1,0 +1,130 @@
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+import java.util.ConcurrentModificationException;
+
+
+public class Server_Day {
+    private Socket socket_day;
+
+    public DataOutputStream out;
+    public DataInputStream in;
+
+    // name of client connected to this server
+    private String name_client;
+
+    /**
+     * constructor for this class newing in and out
+     * @param socket
+     * @throws IOException
+     */
+    public Server_Day(Socket socket) throws IOException {
+        socket_day = socket;
+        out = new DataOutputStream(socket_day.getOutputStream());
+        in = new DataInputStream(socket_day.getInputStream());
+    }
+
+    /**
+     * causing chat room ability and voting
+     * in day
+     */
+    public void connect() {
+
+            try {
+                while(true) {
+                    String message = in.readUTF();
+
+                    if(!message.equals("VOTE_TIME")) {
+                        for (Server_clients client : Server.users) {
+                            if (!client.getServer_day().getName_client().equals(name_client)) {
+                                System.out.println(client.getServer_day().getName_client() + " " + message + ": oi");
+                                client.getServer_day().out.writeUTF(message);
+                            }
+                        }
+                    }
+
+                    String[] msg = message.split(": ");
+                    if (msg[1].equals("VOTE")) {
+                        System.out.println("bib bib " + name_client);
+                        out.writeUTF("FINISH UP");
+                        voting();
+                        Server.ready_continue.replace(name_client,true);
+                        System.out.println(name_client + " ready out w");
+
+                        while (true) {
+                            if (check_end()) {
+                                break;
+                            }
+                        }
+                        out.writeUTF("TOGETHER");
+                        String name = Server.player.most_vote();
+                        if(name != null) {
+                            System.out.println(name_client + " k");
+                            for (Server_clients client : Server.users) {
+                                System.out.println(client.getServer_day().getName_client() + " p");
+                                client.getServer_day().out.writeUTF(name);
+                            }
+                        }
+                        break;
+                    }
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+    }
+
+    /**
+     * check if all players are get to this function and continue together
+     * @return true if all got
+     */
+    private boolean check_end() {
+        try {
+            for (Server_clients client : Server.users) {
+                if (!Server.ready_continue.get(client.getName_client())) {
+                    return false;
+                }
+            }
+            return true;
+        }catch (ConcurrentModificationException e){
+            System.out.println("error got");
+            return false;
+        }
+    }
+
+    /**
+     * getting vote of player , saving in votes in player class
+     * if found nothing but else say (enter another name)
+     * @throws IOException
+     */
+    private void voting() throws IOException {
+        while (true) {
+            String name_vote = in.readUTF();
+            if(Server.player.getting_vote(name_vote)){
+                System.out.println("found m");
+                out.writeUTF("found");
+                break;
+            }
+            else {
+                out.writeUTF("enter another name : ");
+            }
+        }
+    }
+
+    /**
+     * @return the name of player
+     */
+    public String getName_client() {
+        return name_client;
+    }
+
+    /**
+     * set the name of player
+     * @param name_client
+     */
+    public void setName_client(String name_client) {
+        this.name_client = name_client;
+    }
+}

@@ -6,13 +6,21 @@ public class Server_clients implements Runnable{
    // BufferedReader in;
   //  PrintWriter out;
 
+    // showing
+    private boolean alive;
+
     private Play_Round play_round;
 
     DataInputStream in;
     DataOutputStream out;
 
-    // object og introduce_night for accessing to this class
+    // object of introduce_night for accessing to this class
     private Server_introduce_night server_introduce_night;
+
+    // object of day for accessing to this class
+    private Server_Day server_day;
+
+    private Server_Night server_night;
 
     // name of client connected to this server
      private String name_client;
@@ -34,13 +42,16 @@ public class Server_clients implements Runnable{
      */
     public Server_clients(Socket socket, int player_index) throws IOException {
         this.socket = socket;
-     //   in = new DataInputStream(socket.getInputStream());
-    //    out = new DataOutputStream(socket.getOutputStream());
+        in = new DataInputStream(socket.getInputStream());
+        out = new DataOutputStream(socket.getOutputStream());
         server_introduce_night = new Server_introduce_night(socket,player_index);
+        server_day = new Server_Day(socket);
+        server_night = new Server_Night(socket);
         play_round = new Play_Round();
     //    in = new BufferedReader(new InputStreamReader(socket_night.getInputStream()));
     //    out = new PrintWriter(new OutputStreamWriter(socket_night.getOutputStream()))
         this.player_index = player_index;
+        alive = true;
     }
 
     /**
@@ -54,41 +65,69 @@ public class Server_clients implements Runnable{
         try {
         //   while(true) {
             if ("introduce_night".equals(play_round.getState())) {
-                server_introduce_night.connect();
-                Thread.sleep(10000);
-          //      System.out.println("thanks");
+            //    server_introduce_night.connect();
+            //    name_client = server_introduce_night.getName_client();
+             //   System.out.println(name_client);
+
+             //   Thread.sleep(5000);
+                name_client = in.readUTF();
+                if(player_index == 1) {
+                    Server.player.setRoles(name_client, new God_father());
+                }else if(player_index == 2){
+                    Server.player.setRoles(name_client, new Mafia());
+                }else if(player_index == 3){
+                    Server.player.setRoles(name_client, new Doctor_lector());
+                }
+                for(Server_clients client : Server.users){
+                    Server.ready_continue.put(client.getName_client(),false);
+                }
+
                 play_round.state_changing();
+
             }  if ("day".equals(play_round.getState())) {
-           //     System.out.println("its day");
+                server_day.setName_client(name_client);
+                server_day.connect();
+
+                check_alive();
+                Thread.sleep(4000);
+                if(!alive){
+                    System.out.println(name_client + " dead");
+                    out.writeUTF("you are removed");
+                    out.writeUTF("DEAD");
+                    Thread.sleep(3000);
+                    return;
+                }else{
+                    out.writeUTF("ALIVE");
+                }
+
                 play_round.state_changing();
+                Thread.sleep(5000);
             }  if ("night".equals(play_round.getState())) {
-           //     System.out.println("its night");
+                System.out.println("its night");
+
                 play_round.state_changing();
             }
         //    }
-        }catch (InterruptedException e){
+        }catch (InterruptedException | IOException e){
             e.printStackTrace();
         }
 
     }
 
-    // unused function
-    private void sendingmessage(){
+    /**
+     * check if the player is still alive
+     */
+    public void check_alive(){
         try {
-            String s = in.readUTF();
-            StringTokenizer tokenizer = new StringTokenizer(s, "#");
-            String message = tokenizer.nextToken();
-            String receipent = tokenizer.nextToken();
-
-            for (Server_clients client : Server.users) {
-                if (client.name_client.equals(receipent)) {
-                    client.out.writeUTF(this.name_client + " : " + message);
+            for (String player : Server.player.getDead_player()) {
+                if (player.equals(name_client)) {
+                    alive = false;
+                    return;
                 }
             }
-        }catch (IOException e){
-            e.printStackTrace();
-        }
+        }catch (NullPointerException e){
 
+        }
     }
 
     // getting role of the client
@@ -119,5 +158,9 @@ public class Server_clients implements Runnable{
     // getting the player index
     public int getPlayer_index() {
         return player_index;
+    }
+
+    public Server_Day getServer_day() {
+        return server_day;
     }
 }

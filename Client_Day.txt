@@ -1,0 +1,220 @@
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Scanner;
+
+public class Client_Day {
+
+    private DataInputStream in;
+    private DataOutputStream out;
+ //   private Scanner input;
+    private Socket socket;
+
+    private String name_client;
+
+    private ArrayList<String> save_messages;
+
+    private int swich ;
+
+    // state that has done chatting and time over , must vote
+    private boolean vote_time;
+
+    // use in send_message thread or if vote_time is true in voting function
+    private String msg;
+
+    // if proceed to vote manually
+    private boolean vote_manual;
+
+    //
+    private boolean insert;
+
+    // if day is finished
+    private boolean finish_day;
+
+    private ArrayList<String> inputs_storage;
+
+    public Client_Day(Socket socket,String name_client) throws IOException {
+        this.socket = socket;
+        in = new DataInputStream(socket.getInputStream());
+        out = new DataOutputStream(socket.getOutputStream());
+   //     input = new Scanner(System.in);
+        this.name_client = name_client;
+        save_messages = new ArrayList<>();
+        swich = 0;
+        vote_time = false;
+        inputs_storage = new ArrayList<>();
+        vote_manual = false;
+        insert = false;
+        finish_day = false;
+    }
+
+    /**
+     * chating with other players and finally get vote
+     * @throws IOException
+     */
+    public void connect() throws IOException {
+        System.out.println("it is Day...");
+        System.out.println("if any time ready for voting say (VOTE)");
+
+        readMessage.start();
+        sendMessage.start();
+        try{
+            Thread.sleep(300000);
+            out.writeUTF(name_client + ": VOTE");
+            vote_time = true;
+
+        }catch (InterruptedException e){
+            e.printStackTrace();
+        }
+
+    }
+
+    Thread readMessage = new Thread(new Runnable() {
+
+        /**
+         * a thread specified for receiving message
+         * start voting after 5 minute or saying (VOTE)
+         */
+        @Override
+        public void run() {
+            int help = 0 ;
+
+            while (true) {
+                try {
+                    System.out.println("before receive q");
+                    String msg = in.readUTF();
+                    System.out.println("received");
+
+                    if(msg.equals("FINISH UP")){
+                        if(!vote_time){
+                            vote_manual = true;
+                            System.out.println("true manual v");
+                        }
+                        swich = 1;
+                        System.out.println("did did l");
+                        voting();
+                        help = 1;
+                    //    continue;
+                    //    return;
+                    }
+
+                    if(help == 1) {
+                        System.out.println("here");
+                    //    Thread.sleep(3000);
+                        if (msg.equals("TOGETHER")) {
+                            System.out.println("together k");
+                            System.out.println(in.readUTF());
+                            finish_day = true;
+                        //    Thread.sleep(3000);
+                            return;
+                        }
+                    }
+
+                    if(!msg.equals("FINISH UP")) {
+                        System.out.println(msg);
+                    }
+                        Thread.sleep(1000);
+
+                } catch (IOException | InterruptedException e) {
+                    e.printStackTrace();
+                    break;
+                }
+            }
+        }
+
+
+        /**
+         * get the name of a player and if exist set a more vote for him/her
+         * through votes object in player class
+         * @throws IOException
+         */
+        private void voting() throws IOException, InterruptedException {
+            int help = 0 ;
+            Scanner input = new Scanner(System.in);
+            System.out.print("say the name of person you want to vote : ");
+            while (true) {
+                if(help == 0) {
+                    String str = null;
+                    if(vote_manual){
+                        System.out.println("mauanl time ee");
+                        str = input.next();
+                        out.writeUTF(str);
+                        System.out.println("wrote b :" + str);
+                    }
+                    Thread.sleep(2000);
+                }
+                String find = in.readUTF();
+                System.out.println("read xx");
+                if (find.equals("found")) {
+                    System.out.println(find);
+                    break;
+                }else if(find.equals("enter another name : ")){
+                    System.out.print(find);
+                    help = 0;
+                }else{
+                    System.out.println("else cc");
+                    help = 1;
+                }
+            }
+        }
+
+        public String check_input(String message) {
+            try {
+                int help = 0;
+                do {
+                    for (String input : inputs_storage) {
+                        if (input.equals(message)) {
+                            help = 1;
+                            return input;
+                        }
+                    }
+                    Thread.sleep(5000);
+                } while (help != 1);
+            }catch (InterruptedException e){
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+    });
+
+    /**
+     * a thread specified for sending message
+     */
+    Thread sendMessage = new Thread(new Runnable() {
+        @Override
+        public void run() {
+            Scanner input = new Scanner(System.in);
+            while (true) {
+
+                if(swich == 1){
+                    return;
+                }
+                msg = input.nextLine();
+                if(!vote_time){
+                    msg = (name_client + ": " + msg);
+                }else if(!vote_manual){
+                    System.out.println("insert true w");
+                    insert = true;
+                }
+
+                try {
+
+                    // write on the output stream
+                    if(!vote_manual) {
+                        out.writeUTF(msg);
+                    }
+                    Thread.sleep(500);
+                } catch (IOException | InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    });
+
+    public boolean isFinish_day() {
+        return finish_day;
+    }
+}
